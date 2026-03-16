@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — Cyber Buddy Academy</title>
+  <link rel="icon" href="https://raw.githubusercontent.com/Mubyyy404/Cyber-Buddy/main/mylogo.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.6.0/css/all.min.css">
+  <style>
+    :root { --accent:#06b6d4; --accent2:#0ea5e9; --bg:#0b1220; --bg2:#0d1829; --bdr:rgba(6,182,212,.15); --tx:#e6f6f8; --dim:#64748b; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'Poppins',sans-serif; background:var(--bg); color:var(--tx); min-height:100vh; }
+
+    .bg-canvas { position:fixed; inset:0; z-index:0; }
+    .bg-canvas canvas { width:100%; height:100%; display:block; }
+    .content { position:relative; z-index:1; }
+
+    /* Nav */
+    nav { height:58px; background:rgba(11,18,32,.92); border-bottom:1px solid var(--bdr); display:flex; align-items:center; padding:0 24px; backdrop-filter:blur(12px); }
+    .nav-logo { display:flex; align-items:center; gap:9px; font-weight:800; font-size:.95rem; color:var(--accent); }
+    .nav-logo img { width:30px; height:30px; border-radius:7px; }
+
+    .glass-card { background:rgba(13,24,41,.75); border:1px solid rgba(6,182,212,.13); backdrop-filter:blur(16px); border-radius:18px; }
+
+    .input-wrap { position:relative; }
+    .input-field {
+      width:100%; padding:12px 16px;
+      background:rgba(255,255,255,.04); border:1.5px solid rgba(6,182,212,.18);
+      border-radius:10px; color:var(--tx); font-family:'Poppins',sans-serif; font-size:.88rem;
+      transition:border-color .25s, box-shadow .25s; outline:none;
+    }
+    .input-field:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(6,182,212,.1); }
+    .input-field::placeholder { color:rgba(230,246,248,.3); }
+    .input-field.error-field { border-color:#f43f5e !important; box-shadow:0 0 0 3px rgba(244,63,94,.08); }
+
+    .field-error { font-size:.7rem; color:#f87171; margin-top:4px; display:none; }
+    .field-error.show { display:block; }
+
+    .btn-primary {
+      width:100%; padding:13px; background:linear-gradient(135deg,#06b6d4,#0ea5e9);
+      color:#042028; font-weight:700; font-size:.9rem; border:none; border-radius:10px;
+      cursor:pointer; transition:transform .2s, box-shadow .2s; font-family:'Poppins',sans-serif;
+      display:flex; align-items:center; justify-content:center; gap:8px;
+    }
+    .btn-primary:hover:not(:disabled) { transform:translateY(-2px); box-shadow:0 8px 24px rgba(6,182,212,.35); }
+    .btn-primary:disabled { opacity:.6; cursor:not-allowed; }
+
+    .btn-google {
+      width:100%; padding:12px; background:rgba(255,255,255,.05); border:1.5px solid rgba(255,255,255,.1);
+      border-radius:10px; color:var(--tx); font-weight:600; font-size:.88rem; cursor:pointer;
+      transition:all .2s; display:flex; align-items:center; justify-content:center; gap:10px;
+      font-family:'Poppins',sans-serif;
+    }
+    .btn-google:hover { background:rgba(255,255,255,.09); border-color:rgba(6,182,212,.3); }
+
+    .divider { display:flex; align-items:center; gap:12px; color:rgba(230,246,248,.25); font-size:.78rem; }
+    .divider::before,.divider::after { content:''; flex:1; height:1px; background:rgba(255,255,255,.08); }
+
+    /* Alert banner (inline error/success) */
+    .alert-banner {
+      padding:11px 14px; border-radius:9px; font-size:.82rem; font-weight:600;
+      display:none; align-items:center; gap:9px; line-height:1.4;
+    }
+    .alert-banner.show { display:flex; }
+    .alert-banner.error { background:rgba(76,5,25,.6); border:1px solid rgba(244,63,94,.35); color:#fda4af; }
+    .alert-banner.success { background:rgba(6,78,59,.6); border:1px solid rgba(16,185,129,.3); color:#6ee7b7; }
+    .alert-banner.info { background:rgba(6,182,212,.1); border:1px solid rgba(6,182,212,.25); color:var(--accent); }
+
+    .form-wrap { animation:formIn .55s cubic-bezier(.22,1,.36,1) both; }
+    @keyframes formIn { from{opacity:0;transform:translateY(24px) scale(.98)} to{opacity:1;transform:none} }
+
+    .glow { color:var(--accent); text-shadow:0 0 24px rgba(6,182,212,.25); }
+    label { display:block; font-size:.7rem; font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:1.2px; margin-bottom:6px; }
+
+    /* Unverified email prompt */
+    .verify-prompt { display:none; }
+    .verify-prompt.show { display:block; }
+  </style>
+</head>
+<body>
+  <div class="bg-canvas"><canvas id="bg"></canvas></div>
+  <div class="content">
+
+    <!-- Nav -->
+    <nav>
+      <div class="nav-logo">
+        <img src="https://raw.githubusercontent.com/Mubyyy404/Cyber-Buddy/refs/heads/main/mylogo.png" alt="">
+        <span>Cyber<span style="color:#fff;">Buddy</span> <span style="font-size:.7rem;font-weight:400;color:var(--dim);">Academy</span></span>
+      </div>
+    </nav>
+
+    <!-- Form -->
+    <div class="min-h-screen flex items-center justify-center p-4" style="min-height:calc(100vh - 58px);">
+      <div class="form-wrap w-full max-w-md">
+
+        <div class="text-center mb-7">
+          <div style="width:62px;height:62px;border-radius:14px;background:rgba(6,182,212,.1);border:1px solid rgba(6,182,212,.25);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+            <img src="https://raw.githubusercontent.com/Mubyyy404/Cyber-Buddy/refs/heads/main/mylogo.png" alt="" style="width:36px;height:36px;border-radius:7px;">
+          </div>
+          <h1 class="text-2xl font-bold glow" style="letter-spacing:-.3px;">Welcome back</h1>
+          <p class="text-sm mt-1" style="color:var(--dim);">Sign in to your Cyber Buddy account</p>
+        </div>
+
+        <div class="glass-card p-8 space-y-5">
+
+          <!-- Alert banner -->
+          <div id="alertBanner" class="alert-banner">
+            <i class="fas fa-exclamation-circle" style="flex-shrink:0;"></i>
+            <span id="alertText"></span>
+          </div>
+
+          <!-- Unverified email prompt -->
+          <div id="verifyPrompt" class="verify-prompt">
+            <div style="background:rgba(234,179,8,.08);border:1px solid rgba(234,179,8,.25);border-radius:9px;padding:12px 14px;font-size:.8rem;color:#fde68a;">
+              <i class="fas fa-envelope" style="margin-right:6px;"></i>
+              Email not verified. <button id="resendBtn" style="background:none;border:none;color:#06b6d4;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;font-size:.8rem;text-decoration:underline;">Resend verification email</button>
+            </div>
+          </div>
+
+          <!-- Email -->
+          <div>
+            <label>Email Address</label>
+            <input id="email" type="email" class="input-field" placeholder="you@email.com" autocomplete="email">
+            <p class="field-error" id="emailErr"></p>
+          </div>
+
+          <!-- Password -->
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <label style="margin-bottom:0;">Password</label>
+              <button id="forgotBtn" style="background:none;border:none;font-size:.72rem;color:var(--accent);cursor:pointer;font-family:'Poppins',sans-serif;font-weight:600;">Forgot Password?</button>
+            </div>
+            <div class="input-wrap">
+              <input id="password" type="password" class="input-field" placeholder="••••••••" style="padding-right:44px;" autocomplete="current-password">
+              <button id="togglePw" type="button" style="position:absolute;right:13px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--dim);cursor:pointer;padding:4px;font-size:.88rem;">
+                <i class="fas fa-eye" id="pwIcon"></i>
+              </button>
+            </div>
+            <p class="field-error" id="passErr"></p>
+          </div>
+
+          <!-- Login button -->
+          <button id="loginBtn" class="btn-primary">
+            <i class="fas fa-sign-in-alt"></i> Sign In
+          </button>
+
+          <div class="divider">OR</div>
+
+          <button id="googleBtn" class="btn-google">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" alt="">
+            Continue with Google
+          </button>
+
+          <p style="text-align:center;font-size:.83rem;color:var(--dim);">
+            Don't have an account?
+            <a href="register.html" style="color:var(--accent);font-weight:700;text-decoration:none;margin-left:4px;">Register free</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Canvas BG -->
+  <script>
+    const canvas=document.getElementById('bg'),ctx=canvas.getContext('2d');let drops=[];
+    function resize(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;drops=Array.from({length:Math.floor(canvas.width/15)},()=>Math.random()*50);}
+    resize();window.addEventListener('resize',resize);
+    function draw(){
+      ctx.fillStyle='rgba(11,18,32,0.08)';ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.fillStyle='rgba(6,182,212,0.55)';ctx.font='12px monospace';
+      drops.forEach((y,i)=>{ctx.fillText(Math.random()>.5?'1':'0',i*15,y*15);if(y*15>canvas.height&&Math.random()>.975)drops[i]=0;drops[i]+=.7;});
+    }
+    setInterval(draw,55);
+
+    // Password toggle
+    const pw=document.getElementById('password'),pwIcon=document.getElementById('pwIcon');
+    document.getElementById('togglePw').onclick=()=>{const v=pw.type==='password';pw.type=v?'text':'password';pwIcon.className=v?'fas fa-eye-slash':'fas fa-eye';};
+  </script>
+
+  <script type="module">
+    import { auth, db } from "./js/firebase.js";
+    import {
+      signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup,
+      sendPasswordResetEmail, sendEmailVerification, onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+    import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+    // Auto-redirect if already logged in
+    onAuthStateChanged(auth, async user => {
+      if (user && user.emailVerified) {
+        await redirectByRole(user);
+      }
+    });
+
+    function showAlert(msg, type = 'error') {
+      const banner = document.getElementById('alertBanner');
+      const text = document.getElementById('alertText');
+      text.textContent = msg;
+      banner.className = `alert-banner show ${type}`;
+      // icon
+      banner.querySelector('i').className = type === 'success'
+        ? 'fas fa-check-circle' : type === 'info'
+        ? 'fas fa-info-circle' : 'fas fa-exclamation-circle';
+    }
+
+    function clearErrors() {
+      document.getElementById('alertBanner').classList.remove('show');
+      document.getElementById('verifyPrompt').classList.remove('show');
+      ['email','password'].forEach(id => {
+        document.getElementById(id).classList.remove('error-field');
+      });
+      ['emailErr','passErr'].forEach(id => {
+        const el = document.getElementById(id);
+        el.textContent = ''; el.classList.remove('show');
+      });
+    }
+
+    function fieldError(fieldId, errId, msg) {
+      document.getElementById(fieldId).classList.add('error-field');
+      const el = document.getElementById(errId);
+      el.textContent = msg; el.classList.add('show');
+    }
+
+    function parseFirebaseError(code, message) {
+      const map = {
+        'auth/user-not-found': 'No account found with this email address.',
+        'auth/wrong-password': 'Incorrect password. Please try again.',
+        'auth/invalid-email': 'Please enter a valid email address.',
+        'auth/user-disabled': 'This account has been disabled. Contact support.',
+        'auth/too-many-requests': 'Too many failed attempts. Please wait a few minutes before trying again.',
+        'auth/network-request-failed': 'Network error. Check your internet connection.',
+        'auth/invalid-credential': 'Invalid email or password. Please check and try again.',
+        'auth/popup-closed-by-user': 'Sign-in popup was closed. Please try again.',
+        'auth/popup-blocked': 'Popup was blocked by your browser. Allow popups for this site.',
+        'auth/cancelled-popup-request': null, // silent
+        'auth/account-exists-with-different-credential': 'An account already exists with this email using a different sign-in method.',
+      };
+      return map[code] || message || 'An unexpected error occurred. Please try again.';
+    }
+
+    async function redirectByRole(user) {
+      try {
+        const snap = await getDoc(doc(db, 'users', user.uid));
+        if (snap.exists() && snap.data().role === 'admin') {
+          window.location = 'admin.html';
+        } else {
+          window.location = 'dashboard.html';
+        }
+      } catch (e) {
+        window.location = 'dashboard.html';
+      }
+    }
+
+    let lastUser = null; // for resend verification
+
+    // Email login
+    document.getElementById('loginBtn').onclick = async () => {
+      clearErrors();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      if (!email) { fieldError('email', 'emailErr', 'Email address is required.'); return; }
+      if (!password) { fieldError('password', 'passErr', 'Password is required.'); return; }
+
+      const btn = document.getElementById('loginBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
+
+      try {
+        const res = await signInWithEmailAndPassword(auth, email, password);
+        if (!res.user.emailVerified) {
+          lastUser = res.user;
+          document.getElementById('verifyPrompt').classList.add('show');
+          showAlert('Please verify your email before signing in. Check your inbox for a verification link.', 'info');
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In';
+          return;
+        }
+        await redirectByRole(res.user);
+      } catch (err) {
+        const code = err.code || '';
+        const msg = parseFirebaseError(code, err.message);
+        if (!msg) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In'; return; }
+
+        // Field-level errors
+        if (code === 'auth/invalid-email') {
+          fieldError('email', 'emailErr', msg);
+        } else if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
+          fieldError('password', 'passErr', msg);
+        } else if (code === 'auth/user-not-found') {
+          fieldError('email', 'emailErr', msg);
+        } else {
+          showAlert(msg, 'error');
+        }
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In';
+      }
+    };
+
+    // Allow Enter key
+    document.getElementById('password').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('loginBtn').click();
+    });
+
+    // Resend verification
+    document.getElementById('resendBtn').onclick = async () => {
+      if (!lastUser) return;
+      try {
+        await sendEmailVerification(lastUser);
+        showAlert('Verification email resent! Check your inbox.', 'success');
+      } catch (e) {
+        showAlert('Could not resend email. Try again shortly.', 'error');
+      }
+    };
+
+    // Google OAuth
+    document.getElementById('googleBtn').onclick = async () => {
+      clearErrors();
+      try {
+        const result = await signInWithPopup(auth, new GoogleAuthProvider());
+        const user = result.user;
+        const ref = doc(db, 'users', user.uid);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) {
+          await setDoc(ref, {
+            name: user.displayName, email: user.email,
+            phone: '', role: 'user', purchasedCourses: [], createdAt: new Date()
+          });
+        }
+        await redirectByRole(user);
+      } catch (err) {
+        const msg = parseFirebaseError(err.code, 'Google sign-in failed. Please try again.');
+        if (msg) showAlert(msg, 'error');
+      }
+    };
+
+    // Forgot password
+    document.getElementById('forgotBtn').onclick = async () => {
+      clearErrors();
+      const email = document.getElementById('email').value.trim();
+      if (!email) {
+        fieldError('email', 'emailErr', 'Enter your email address first, then click Forgot Password.');
+        return;
+      }
+      try {
+        await sendPasswordResetEmail(auth, email);
+        showAlert('Password reset email sent to ' + email + '. Check your inbox.', 'success');
+      } catch (err) {
+        const msg = parseFirebaseError(err.code, err.message);
+        if (err.code === 'auth/user-not-found') {
+          fieldError('email', 'emailErr', 'No account found with this email address.');
+        } else {
+          showAlert(msg, 'error');
+        }
+      }
+    };
+  </script>
+</body>
+</html>
